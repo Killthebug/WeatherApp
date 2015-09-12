@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="1">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Today - Sunny - 88/63"
+        android:minHeight="?android:attr/listPreferredItemHeight"
+        android:id="@+id/list_item_forecast_textview"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="0.03"
+        android:padding="5dp"
+        android:paddingLeft="5dp"
+        android:paddingTop="5dp"
+        android:paddingRight="5dp"
+        android:paddingBottom="5dp"
+        android:textColor="#000000"
+        android:textIsSelectable="true"
+        android:textSize="10dp"
+        android:textAlignment="center" />
+</LinearLayout>
