@@ -5,11 +5,14 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-
+import android.net.Uri;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +30,39 @@ public class ForecastFragment extends Fragment {
     // The Array adapter parses the array and makes it displayable
     ArrayAdapter<String> mForecastAdapter;
     public ForecastFragment() {
+    }
+
+    // This is extremely important
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+        // This indicates that we have call backs for these methods
+        // Make sure you have this line of code.
+    }
+
+    // This is the most basic method to inflate a view
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        // Pushes to the forecastfragment.xml file
+        inflater.inflate(R.menu.forecastfragment, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        // Handle action bar clicks here
+        // Specify a parent activity to re route route to home
+        // This notifies us when the Menu item is selected
+        int id = item.getItemId();
+
+        if (id == R.id.action_refresh){
+            // if Refresh is places call the FetchWeatherTask
+            FetchWeatherTask weatherTask = new FetchWeatherTask();
+            weatherTask.execute("500032");
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -87,13 +123,14 @@ public class ForecastFragment extends Fragment {
 
         return rootView;
     }
-
-    public class FetchWeatherTask extends AsyncTask<Void, Void, Void> {
+                                                    // The input is of type : String
+    public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
 
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
         @Override
-        protected Void doInBackground(Void... params) {
+        // This method should take in String params
+        protected Void doInBackground(String ... params) {
             // These two need to be declared outside the try/catch
 // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -102,11 +139,37 @@ public class ForecastFragment extends Fragment {
             // Will contain the raw JSON response as a string.
             String forecastJsonStr = null;
 
+            String format = "json";
+            String units = "metric";
+            int numDays = 7;
+
             try {
                 // Construct the URL for the OpenWeatherMap query
                 // Possible parameters are avaiable at OWM's forecast API page, at
                 // http://openweathermap.org/API#forecast
-                URL url = new URL("http://api.openweathermap.org/data/2.5/forecast/daily?q=500032&mode=json&units=metric&cnt=7");
+
+                final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast/daily";
+                final String QUERY_PARAM = "q";
+                final String FORMAT_PARAM = "node";
+                final String UNITS_PARAM = "units";
+                final String DAYS_PARAM = "cnt";
+
+                /*
+                The one's in captial letters are constants
+                incase we don't have their values available
+                to pass as parameters
+                 */
+
+                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                        .appendQueryParameter(QUERY_PARAM, params[0])
+                        .appendQueryParameter(FORMAT_PARAM, format)
+                        .appendQueryParameter(UNITS_PARAM, units)
+                        .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
+                        .build();
+
+                URL url = new URL(builtUri.toString());
+
+                Log.v(LOG_TAG, "Build URL" + builtUri.toString());
 
                 // Create the request to OpenWeatherM ap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -135,6 +198,8 @@ public class ForecastFragment extends Fragment {
                     return null;
                 }
                 forecastJsonStr = buffer.toString();
+
+                Log.v(LOG_TAG, "Forecasted JSON" + forecastJsonStr);
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
                 // If the code didn't successfully get the weather data, there's no point in attemping
